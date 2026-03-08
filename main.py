@@ -1,18 +1,27 @@
-# jobfit_api.py
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from PyPDF2 import PdfReader
-import os
 import re
-from dotenv import load_dotenv
+import json
 
+# Load .env file ONLY for local development (does nothing on Railway)
 load_dotenv()
+
+# Get API key from environment variable (works everywhere)
+google_api_key = os.getenv("GOOGLE_API_KEY")
+
+# Validate the key is present - FIX THIS LINE
+if not google_api_key:
+    # CHANGE THIS: Don't mention .env file in the error
+    raise ValueError("GOOGLE_API_KEY environment variable is not set. Please add it in Railway dashboard.")
 
 app = FastAPI(title="Job Fit & Skill Gap Analyzer API")
 
-# Allow frontend connections
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,11 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Initialize LLM ---
-google_api_key = os.getenv("GOOGLE_API_KEY")
-if not google_api_key:
-    raise ValueError("GOOGLE_API_KEY environment variable not found in .env file")
-
+# Initialize LLM with the key from environment
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     google_api_key=google_api_key
